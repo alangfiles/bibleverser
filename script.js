@@ -1,8 +1,10 @@
 
 
 let sentences = [];
-let likedSentences = [];
-let dislikedSentences = [];
+let matchedVerses = (localStorage.getItem("matchedVerses") && localStorage.getItem("matchedVerses").split(",")) ?? [];
+let unmatchedVerses = (localStorage.getItem("unmatchedVerses") && localStorage.getItem("unmatchedVerses").split(",")) ?? [];
+
+
 
 // Fetch the sentences from sentences.json
 fetch('bible.json')
@@ -15,9 +17,11 @@ fetch('bible.json')
     sentences = data.Book.flatMap(c => c.Chapter.flatMap(v => v.Verse));
 
     showRandomSentence();
+    populateSections();
   })
   .catch(error => console.error('Error fetching sentences:', error));
 
+  
 function showRandomSentence() {
   if (sentences.length === 0) {
     document.getElementById('sentenceCard').innerText = 'No more sentences!';
@@ -139,16 +143,13 @@ function touchMove(event) {
 
     const movedBy = currentTranslate - prevTranslate;
 
-    if(movedBy < -100){
+    if (movedBy < -100) {
       cardElement.classList.add('dislike');
-    } else if(movedBy > 100){
+    } else if (movedBy > 100) {
       cardElement.classList.add('like');
     } else {
       cardElement.classList.remove('like', 'dislike');
     }
-  
-
-    
   }
 }
 
@@ -161,25 +162,30 @@ function touchEnd() {
   const verseId = document.getElementById('sentenceId').innerText;
 
   if (movedBy < -100) {
-    cardElement.style.transform = `translateX(-100%)`;
-    cardElement.style.opacity = '0';
-    dislikedSentences.push(verseId);
-    console.log(`disliked verse ${verseId}`)
-    
-    resetCard();
-    prevTranslate = 0;
+    unmatchedAction();
   } else if (movedBy > 100) {
-    cardElement.style.transform = `translateX(100%)`;
-    cardElement.style.opacity = '0';
-    likedSentences.push(verseId);
-    
-    console.log(`liked verse ${verseId}`)
-    resetCard();
-    prevTranslate = 0;
+    matchedAction();
   } else {
     currentTranslate = prevTranslate;
     cardElement.style.transform = `translateX(${currentTranslate}px)`;
   }
+}
+
+function unmatchedAction() {
+  cardElement.style.transform = `translateX(-100%)`;
+  cardElement.style.opacity = '0';
+  unmatchedVerses.push(verseId);
+  localStorage.setItem("unmatchedVerses", unmatchedVerses);
+  resetCard();
+}
+
+
+function matchedAction() {
+  cardElement.style.transform = `translateX(100%)`;
+  cardElement.style.opacity = '0';
+  matchedVerses.push(verseId);
+  localStorage.setItem("matchedVerses", matchedVerses);
+  resetCard();
 }
 
 function resetCard() {
@@ -200,32 +206,29 @@ function resetCard() {
     });
   }, 400);
 
-  
+
+}
+
+
+
+function getAllLiked() {
+  return sentences.filter(s => matchedVerses.includes(s.Verseid))
+}
+
+function getAllDisliked() {
+  return sentences.filter(s => unmatchedVerses.includes(s.Verseid))
+}
+
+function populateSections() {
+  const matchedVerses = document.getElementById('matchedVerses');
+  const unmatchedVerses = document.getElementById('unmatchedVerses');
+
+  matchedVerses.innerHTML = getAllLiked().map(v => (`<p>${v.Verse} - ${verseReference(v.Verseid)}</p>`)).join("<br/>");
+  unmatchedVerses.innerHTML = getAllDisliked().map(v => (`<p>${v.Verse}  - ${verseReference(v.Verseid)}</p>`)).join("<br/>");
+
 }
 
 function animation(verseId) {
   cardElement.style.transform = `translateX(${currentTranslate}px)`;
   if (isDragging) requestAnimationFrame(animation);
 }
-
-
-
-function swipeCard(action) {
-  const card = document.getElementById('sentenceCard');
-  const sentenceId = document.getElementById('sentenceId').innerText;
-
-  if (action === "like") {
-
-  } else {
-
-  }
-  card.classList.add(action === 'like' ? 'like' : 'dislike');
-  card.classList.add('hidden');
-
-  setTimeout(() => {
-    card.classList.remove('hidden', 'like', 'dislike');
-    showRandomSentence();
-  }, 300);
-}
-
-
