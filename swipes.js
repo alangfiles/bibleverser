@@ -2,15 +2,12 @@
 function startSwipe(event) {
     let card = event.currentTarget;
     let startX = event.clientX || event.touches[0].clientX;
-    let startY = event.clientY || event.touches[0].clientY;
 
     function onSwipe(event) {
-        let currentX = event.clientX || event.touches[0].clientX;
-        let currentY = event.clientY || event.touches[0].clientY;
-        let diffX = currentX - startX;
-        let diffY = currentY - startY;
+      let currentX = event.clientX || event.touches[0].clientX;
+      let diffX = currentX - startX;
 
-        card.style.transform = `translate(${diffX}px, ${diffY}px) rotate(${diffX / 10}deg)`;
+        card.style.transform = `translate(${diffX}px, 0px) rotate(${diffX / 10}deg)`;
 
         let colorValue = Math.min(Math.abs(diffX), 40);
         if (diffX > 0) {
