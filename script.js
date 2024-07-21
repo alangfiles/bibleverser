@@ -23,6 +23,7 @@ fetch('bible.json')
 
   
 function showRandomSentence() {
+  let cardElement = document.getElementById('sentenceCard');
   if (sentences.length === 0) {
     document.getElementById('sentenceCard').innerText = 'No more sentences!';
     return;
@@ -32,8 +33,10 @@ function showRandomSentence() {
   document.getElementById('sentenceCard').innerText = `${sentence.Verse}\n\n${verseReference(sentence.Verseid)}`;
   document.getElementById('sentenceId').innerText = sentence.Verseid;
 
-  cardElement.style.transform = `translateX(0px)`;
-  cardElement.style.opacity = '1';
+  
+
+  cardElement.addEventListener('mousedown', startSwipe);
+  cardElement.addEventListener('touchstart', startSwipe);
 }
 
 function verseReference(verseId) {
@@ -115,100 +118,6 @@ function verseReference(verseId) {
   return `${book} ${chapter}:${verse}`;
 }
 
-const cardElement = document.getElementById('sentenceCard');
-cardElement.addEventListener('touchstart', touchStart());
-cardElement.addEventListener('touchend', touchEnd);
-cardElement.addEventListener('touchmove', touchMove);
-
-let isDragging = false;
-let startX;
-let currentTranslate = 0;
-let prevTranslate = 0;
-let animationID;
-
-function touchStart() {
-  return function (event) {
-    startX = event.touches[0].clientX;
-    isDragging = true;
-
-    animationID = requestAnimationFrame(animation);
-  }
-}
-
-function touchMove(event) {
-  if (isDragging) {
-    const currentX = event.touches[0].clientX;
-    const deltaX = currentX - startX;
-    currentTranslate = prevTranslate + deltaX;
-
-    const movedBy = currentTranslate - prevTranslate;
-
-    if (movedBy < -100) {
-      cardElement.classList.add('dislike');
-    } else if (movedBy > 100) {
-      cardElement.classList.add('like');
-    } else {
-      cardElement.classList.remove('like', 'dislike');
-    }
-  }
-}
-
-function touchEnd() {
-  isDragging = false;
-  cancelAnimationFrame(animationID);
-
-  const movedBy = currentTranslate - prevTranslate;
-
-  const verseId = document.getElementById('sentenceId').innerText;
-
-  if (movedBy < -100) {
-    unmatchedAction();
-  } else if (movedBy > 100) {
-    matchedAction();
-  } else {
-    currentTranslate = prevTranslate;
-    cardElement.style.transform = `translateX(${currentTranslate}px)`;
-  }
-}
-
-function unmatchedAction() {
-  cardElement.style.transform = `translateX(-100%)`;
-  cardElement.style.opacity = '0';
-  unmatchedVerses.push(verseId);
-  localStorage.setItem("unmatchedVerses", unmatchedVerses);
-  resetCard();
-}
-
-
-function matchedAction() {
-  cardElement.style.transform = `translateX(100%)`;
-  cardElement.style.opacity = '0';
-  matchedVerses.push(verseId);
-  localStorage.setItem("matchedVerses", matchedVerses);
-  resetCard();
-}
-
-function resetCard() {
-  setTimeout(() => {
-    showRandomSentence();
-    cardElement.style.transition = 'none';
-    cardElement.style.transform = 'translateX(0)';
-    cardElement.style.opacity = '1';
-    isDragging = false;
-    currentTranslate = 0;
-    prevTranslate = 0;
-    cardElement.classList.remove('hidden', 'like', 'dislike');
-
-  }, 300);
-  setTimeout(() => {
-    requestAnimationFrame(() => {
-      cardElement.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
-    });
-  }, 400);
-
-
-}
-
 
 
 function getAllLiked() {
@@ -226,9 +135,4 @@ function populateSections() {
   matchedVerses.innerHTML = getAllLiked().map(v => (`<p>${v.Verse} - ${verseReference(v.Verseid)}</p>`)).join("<br/>");
   unmatchedVerses.innerHTML = getAllDisliked().map(v => (`<p>${v.Verse}  - ${verseReference(v.Verseid)}</p>`)).join("<br/>");
 
-}
-
-function animation(verseId) {
-  cardElement.style.transform = `translateX(${currentTranslate}px)`;
-  if (isDragging) requestAnimationFrame(animation);
 }
