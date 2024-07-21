@@ -11,6 +11,13 @@ function startSwipe(event) {
         let diffY = currentY - startY;
 
         card.style.transform = `translate(${diffX}px, ${diffY}px) rotate(${diffX / 10}deg)`;
+
+        let colorValue = Math.min(Math.abs(diffX), 40);
+        if (diffX > 0) {
+            card.style.backgroundColor = `rgb(${255 - colorValue}, 255, ${255 - colorValue})`; // More green for right swipe
+        } else {
+            card.style.backgroundColor = `rgb(255, ${255 - colorValue}, ${255 - colorValue})`; // More red for left swipe
+        }
     }
 
     function endSwipe() {
@@ -27,12 +34,14 @@ function startSwipe(event) {
             showRandomSentence();
               card.style.transition = 'transform 0.3s';
               card.style.transform = 'translate(0, 0) rotate(0)';
+              card.style.backgroundColor = 'white';
             setTimeout(() => {
               card.style.opacity = '1';
             }, 300);
         } else {
             card.style.transition = 'transform 0.3s';
             card.style.transform = 'translate(0, 0) rotate(0)';
+            card.style.backgroundColor = 'white';
         }
     }
 
